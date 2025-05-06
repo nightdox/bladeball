@@ -1,6 +1,6 @@
 --// beabadoobee 💚
 
--- Mensagem na tela ao iniciar
+-- Função para exibir a mensagem na tela
 local StarterGui = game:GetService("StarterGui")
 StarterGui:SetCore("SendNotification", {
     Title = "beabadoobee",
@@ -8,45 +8,56 @@ StarterGui:SetCore("SendNotification", {
     Duration = 4
 })
 
--- Configurações
-local autoParry = true
-local autoSpam = true
-local spamDelay = 0.1 -- segundos entre cada spam
+-- Função para centralizar e aumentar a mensagem
+local function showMessage()
+    local message = Instance.new("TextLabel")
+    message.Parent = game.CoreGui
+    message.Text = "Script created by beabadoobee"
+    message.TextColor3 = Color3.fromRGB(255, 255, 255) -- Cor branca
+    message.TextSize = 40 -- Tamanho da fonte maior
+    message.TextStrokeTransparency = 0.5
+    message.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Cor da borda (preto)
+    message.Size = UDim2.new(0, 600, 0, 100) -- Tamanho da caixa de texto
+    message.Position = UDim2.new(0.5, -300, 0.5, -50) -- Centralizado na tela
+    message.AnchorPoint = Vector2.new(0.5, 0.5) -- Centraliza a posição
+    message.BackgroundTransparency = 1 -- Fundo transparente
 
--- Variáveis
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
+    wait(4) -- Mensagem ficará na tela por 4 segundos
+    message:Destroy() -- Remove a mensagem após 4 segundos
+end
 
--- Função para Parry
+-- Chama a função para exibir a mensagem
+showMessage()
+
+-- Parry Function
 local function doParry()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local parryRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Parry")
     if parryRemote then
         parryRemote:FireServer()
     end
 end
 
--- Auto Parry
-if autoParry then
+-- Auto Parry Logic
+local function autoParry()
+    local RunService = game:GetService("RunService")
+    local LocalPlayer = game.Players.LocalPlayer
+    local Ball = workspace:FindFirstChild("Ball")
+
     RunService.RenderStepped:Connect(function()
-        local Ball = workspace:FindFirstChild("Ball")
-        if Ball and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local dist = (Ball.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-            local velocity = Ball.Velocity.Magnitude
-            if dist < 20 and velocity > 10 then
+        if Ball and LocalPlayer.Character then
+            local playerPos = LocalPlayer.Character.HumanoidRootPart.Position
+            local ballPos = Ball.Position
+            local distance = (playerPos - ballPos).Magnitude
+            local ballSpeed = Ball.Velocity.Magnitude
+
+            -- Trigger Parry when ball is near and moving fast
+            if distance < 20 and ballSpeed > 10 then
                 doParry()
             end
         end
     end)
 end
 
--- Auto Spam
-if autoSpam then
-    task.spawn(function()
-        while true do
-            doParry()
-            task.wait(spamDelay)
-        end
-    end)
-end
+-- Activate Auto Parry
+autoParry()
