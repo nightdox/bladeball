@@ -1,35 +1,4 @@
---// beabadoobee 💚
-
--- Função para exibir a mensagem na tela
-local StarterGui = game:GetService("StarterGui")
-StarterGui:SetCore("SendNotification", {
-    Title = "beabadoobee",
-    Text = "Script created by beabadoobee",
-    Duration = 4
-})
-
--- Função para centralizar e aumentar a mensagem
-local function showMessage()
-    local message = Instance.new("TextLabel")
-    message.Parent = game.CoreGui
-    message.Text = "Script created by beabadoobee"
-    message.TextColor3 = Color3.fromRGB(255, 255, 255) -- Cor branca
-    message.TextSize = 40 -- Tamanho da fonte maior
-    message.TextStrokeTransparency = 0.5
-    message.TextStrokeColor3 = Color3.fromRGB(0, 0, 0) -- Cor da borda (preto)
-    message.Size = UDim2.new(0, 600, 0, 100) -- Tamanho da caixa de texto
-    message.Position = UDim2.new(0.5, -300, 0.5, -50) -- Centralizado na tela
-    message.AnchorPoint = Vector2.new(0.5, 0.5) -- Centraliza a posição
-    message.BackgroundTransparency = 1 -- Fundo transparente
-
-    wait(4) -- Mensagem ficará na tela por 4 segundos
-    message:Destroy() -- Remove a mensagem após 4 segundos
-end
-
--- Chama a função para exibir a mensagem
-showMessage()
-
--- Parry Function
+--// Parry Function
 local function doParry()
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local parryRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Parry")
@@ -38,7 +7,7 @@ local function doParry()
     end
 end
 
--- Auto Parry Logic
+--// Auto Parry Logic
 local function autoParry()
     local RunService = game:GetService("RunService")
     local LocalPlayer = game.Players.LocalPlayer
@@ -52,12 +21,12 @@ local function autoParry()
             local ballSpeed = Ball.Velocity.Magnitude
 
             -- Trigger Parry when ball is near and moving fast
-            if distance < 20 and ballSpeed > 10 then
+            if distance < 15 and ballSpeed > 20 then
                 doParry()
             end
         end
     end)
 end
 
--- Activate Auto Parry
+--// Start Auto Parry
 autoParry()
