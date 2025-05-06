@@ -1,0 +1,52 @@
+--// beabadoobee 💚
+
+-- Mensagem na tela ao iniciar
+local StarterGui = game:GetService("StarterGui")
+StarterGui:SetCore("SendNotification", {
+    Title = "beabadoobee",
+    Text = "Script created by beabadoobee",
+    Duration = 4
+})
+
+-- Configurações
+local autoParry = true
+local autoSpam = true
+local spamDelay = 0.1 -- segundos entre cada spam
+
+-- Variáveis
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- Função para Parry
+local function doParry()
+    local parryRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Parry")
+    if parryRemote then
+        parryRemote:FireServer()
+    end
+end
+
+-- Auto Parry
+if autoParry then
+    RunService.RenderStepped:Connect(function()
+        local Ball = workspace:FindFirstChild("Ball")
+        if Ball and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (Ball.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            local velocity = Ball.Velocity.Magnitude
+            if dist < 20 and velocity > 10 then
+                doParry()
+            end
+        end
+    end)
+end
+
+-- Auto Spam
+if autoSpam then
+    task.spawn(function()
+        while true do
+            doParry()
+            task.wait(spamDelay)
+        end
+    end)
+end
