@@ -1,32 +1,139 @@
---// Parry Function
-local function doParry()
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local parryRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Parry")
-    if parryRemote then
-        parryRemote:FireServer()
+-- Gui + AutoParry integrado estilo Infernirum Hub
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local player = Players.LocalPlayer
+local cooldown = 0
+local parried = false
+local connection = nil
+local autoParryEnabled = false
+
+-- Criar parry block
+local function createParryBlock()
+    local block = Instance.new("Part")
+    block.Size = Vector3.new(20, 20, 20)
+    block.Transparency = 1
+    block.CanCollide = false
+    block.Anchored = false
+    block.Material = Enum.Material.ForceField
+    block.BrickColor = BrickColor.new("Lime green")
+    block.Name = "ParryTrigger"
+
+    local selection = Instance.new("SelectionBox")
+    selection.Color3 = Color3.fromRGB(0, 255, 0)
+    selection.LineThickness = 0.05
+    selection.Adornee = block
+    selection.Parent = block
+
+    return block
+end
+
+local function getBall()
+    for _, Ball in ipairs(workspace.Balls:GetChildren()) do
+        if Ball:GetAttribute("realBall") then
+            return Ball
+        end
     end
 end
 
---// Auto Parry Logic
-local function autoParry()
-    local RunService = game:GetService("RunService")
-    local LocalPlayer = game.Players.LocalPlayer
-    local Ball = workspace:FindFirstChild("Ball")
-
-    RunService.RenderStepped:Connect(function()
-        if Ball and LocalPlayer.Character then
-            local playerPos = LocalPlayer.Character.HumanoidRootPart.Position
-            local ballPos = Ball.Position
-            local distance = (playerPos - ballPos).Magnitude
-            local ballSpeed = Ball.Velocity.Magnitude
-
-            -- Trigger Parry when ball is near and moving fast
-            if distance < 15 and ballSpeed > 20 then
-                doParry()
-            end
-        end
-    end)
+local function resetConnection()
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
 end
 
---// Start Auto Parry
-autoParry()
+local parryBlock = createParryBlock()
+parryBlock.Parent = workspace
+
+local function updateBlockPosition()
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        parryBlock.CFrame = player.Character.HumanoidRootPart.CFrame
+    end
+end
+
+workspace.Balls.ChildAdded:Connect(function()
+    local Ball = getBall()
+    if not Ball then return end
+    resetConnection()
+    connection = Ball:GetAttributeChangedSignal("target"):Connect(function()
+        parried = false
+    end)
+end)
+
+parryBlock.Touched:Connect(function(hit)
+    if not autoParryEnabled then return end
+
+    local Ball = getBall()
+    if not Ball then return end
+
+    if hit == Ball and Ball:GetAttribute("target") == player.Name and not parried then
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+        parried = true
+        cooldown = tick()
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    updateBlockPosition()
+    if parried and (tick() - cooldown >= 1) then
+        parried = false
+    end
+end)
+
+-- GUI
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+screenGui.Name = "beabadoobee_UI"
+
+local mainFrame = Instance.new("Frame", screenGui)
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+title.Text = "Blade Ball | V1.0.0 by beabadoobee"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+
+local autoParryToggle = Instance.new("TextButton", mainFrame)
+autoParryToggle.Position = UDim2.new(0, 10, 0, 50)
+autoParryToggle.Size = UDim2.new(0, 280, 0, 30)
+autoParryToggle.Text = "Auto Parry: OFF"
+autoParryToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+autoParryToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoParryToggle.Font = Enum.Font.Gotham
+autoParryToggle.TextSize = 14
+
+autoParryToggle.MouseButton1Click:Connect(function()
+    autoParryEnabled = not autoParryEnabled
+    autoParryToggle.Text = autoParryEnabled and "Auto Parry: ON" or "Auto Parry: OFF"
+    autoParryToggle.BackgroundColor3 = autoParryEnabled and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
+end)
+
+-- Placeholders
+local followBall = Instance.new("TextButton", mainFrame)
+followBall.Position = UDim2.new(0, 10, 0, 90)
+followBall.Size = UDim2.new(0, 280, 0, 30)
+followBall.Text = "Follow Ball (em breve)"
+followBall.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+followBall.TextColor3 = Color3.fromRGB(255, 255, 255)
+followBall.Font = Enum.Font.Gotham
+followBall.TextSize = 14
+
+local autoDodge = Instance.new("TextButton", mainFrame)
+autoDodge.Position = UDim2.new(0, 10, 0, 130)
+autoDodge.Size = UDim2.new(0, 280, 0, 30)
+autoDodge.Text = "Auto Dodge (em breve)"
+autoDodge.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+autoDodge.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoDodge.Font = Enum.Font.Gotham
+autoDodge.TextSize = 14
